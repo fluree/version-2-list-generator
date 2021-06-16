@@ -6,7 +6,6 @@ import { signQuery, signTransaction } from '@fluree/crypto-utils';
 import usersAuth from './data/usersAuth';
 
 //List Context holds all the functionality that will issue transactions and queries from the Fluree DB
-
 const ListContext = React.createContext({});
 
 const ListProvider = (props) => {
@@ -110,6 +109,7 @@ const ListProvider = (props) => {
     setUsers(response.data);
   };
 
+  //load all the list-owner data from fdb on render to propagate the "listOwner" Select
   const loadOwnerData = async () => {
     const response = await axios.post(`${baseURL}query`, {
       select: { '?user': ['_id', 'username'] },
@@ -128,7 +128,7 @@ const ListProvider = (props) => {
     setOwners(filterOwnerData);
   };
 
-  //calls the assignee data function
+  //calls the assignee data and owner data functions
   useEffect(() => {
     loadAssignedToData();
     loadOwnerData();
@@ -257,7 +257,9 @@ const ListProvider = (props) => {
     addList(list);
   };
 
+  //deletes the item from Fluree, checks the permissions, and then deletes from UI
   let deleteTaskFromFluree = (chosenTask) => {
+    //variables for the signing of the transaction
     const privateKey = selectedUser.privateKey;
     const auth = selectedUser.authId;
     const db = `${network}/${database}`;
@@ -289,7 +291,7 @@ const ListProvider = (props) => {
       .then((response) => response.json())
       .then((data) => {
         txID = data;
-        console.log(txID);
+        //query for the transaction status
         let txQuery = {
           select: ['*'],
           from: ['_tx/id', txID],
@@ -302,12 +304,12 @@ const ListProvider = (props) => {
           body: JSON.stringify(txQuery),
           headers: { 'Content-Type': 'application/json' },
         };
-
+        //takes the txID that is returned then queries for the status
         async function queryTransaction() {
           const txRes = await fetch(`${baseURL}query`, fetchData);
           const id = await txRes.json();
-          console.log(id);
           if (id[0].error) {
+            //will show alert if response has error
             window.alert('You cannot delete this task');
             return;
           }
@@ -320,17 +322,18 @@ const ListProvider = (props) => {
               //deletes the task from the UI
             }
             return list;
-            //calls the custom hook to set the lists in the UI
           });
+          //calls the custom hook to set the lists in the UI
           setLists(remainingTasks);
         }
+        //waits for transaction to be recieved from the ledger to the query peer
         setTimeout(() => {
           queryTransaction();
-          console.log('inside timeout');
         }, 1000);
       });
   };
 
+  //edits the item in Fluree (task name or their completed status), checks the permissions, and then accepts the edits to the UI
   let editTaskProps = (newTask) => {
     let taskChangeTransact = [
       //sets the transaction to update data, this type of query can include the "_action" : "update", but if it is transact it is inferred
@@ -340,6 +343,7 @@ const ListProvider = (props) => {
         isCompleted: newTask.isCompleted, //completed status, if different it will change in Fluree
       },
     ];
+    //variables for the signing of the transaction
     const privateKey = selectedUser.privateKey;
     const auth = selectedUser.authId;
     const db = `${network}/${database}`;
@@ -366,7 +370,7 @@ const ListProvider = (props) => {
       .then((response) => response.json())
       .then((data) => {
         txID = data;
-        console.log(txID);
+        //query for the transaction status
         let txQuery = {
           select: ['*'],
           from: ['_tx/id', txID],
@@ -379,32 +383,31 @@ const ListProvider = (props) => {
           body: JSON.stringify(txQuery),
           headers: { 'Content-Type': 'application/json' },
         };
-
+        //takes the txID that is returned then queries for the status
         async function queryTransaction() {
           const txRes = await fetch(`${baseURL}query`, fetchData);
           const id = await txRes.json();
-          console.log(id);
           if (id[0].error) {
             window.alert('You cannot edit this task');
             return;
           }
-          //task are edited (task name or their completed status)
+          //maps through each list
           const editedTaskList = lists.map((list) => {
-            //for every task loop through the task's data
             const index = list.tasks.findIndex(
               (task) => task._id === newTask._id
-            ); //match on _id
+            ); //match task on _id
 
             if (index >= 0) {
               list.tasks[index] = newTask; //sets the selected task to the newTask with changes
             }
             return list;
           });
+          //calls the custom hook to set the lists in the UI
           setLists(editedTaskList);
         }
+        //waits for transaction to be recieved from the ledger to the query peer
         setTimeout(() => {
           queryTransaction();
-          console.log('inside timeout');
         }, 1000);
       });
   };
