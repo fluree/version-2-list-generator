@@ -11,7 +11,7 @@ This tutorial is a follow up to the first tutorial found [here](https://github.c
 
 ## Getting started
 
-1. To get started git clone the repo via `git clone https://github.com/fluree/version-2-list-generator.git`, or any other preferred method.
+1. To get started git clone the repo via `git clone https://github.com/fluree/version-2-lists-generator.git`, or any other preferred method.
 
 2. `cd` into the repo and run `npm install`
 
@@ -49,7 +49,7 @@ Now that we have a basic understanding of how identity and permissions can be us
 
 ### Schema Changes
 
-In the previous version of this application the `_user` collection was not used, but now that we need to leverage permissioning we will utilize the `_user` collection, along with their `username` predicate. The only other additions are the following predicates: `list/listOwner`, `assignee/user`, and `task/issuedBy`, where all of these predicates reference the `_user` collection. The `list/listOwner` predicate references a single user, while the`assignee/user` predicate is `multi: true`, meaning it can reference multiple users, given that a list can have more than one assignee. The entire schema can be found [here](https://github.com/fluree/version-2-list-generator/blob/to-do-V2-auth_and_permissions/src/data/01-Schema.json)and transacted to a new Fluree ledger.
+In the previous version of this application the `_user` collection was not used, but now that we need to leverage permissioning we will utilize the `_user` collection, along with their `username` predicate. The only other additions are the following predicates: `list/listOwner`, `assignee/user`, and `task/issuedBy`, where all of these predicates reference the `_user` collection. The `list/listOwner` predicate references a single user, while the`assignee/user` predicate is `multi: true`, meaning it can reference multiple users, given that a list can have more than one assignee. The entire schema can be found [here](https://github.com/fluree/version-2-lists-generator/blob/to-do-V2-auth_and_permissions/src/data/01-Schema.json)and transacted to a new Fluree ledger.
 
 ### Roles and Rules
 
@@ -142,13 +142,13 @@ Not all rules may need a custom smart function as the one above, in some cases a
 
 > The transaction above is a rule where all users can view assignee data, so this rule will always evaluate to true.
 
-We won't go over every rule and their smart functions connected to the endUser role, however they can all be found [here](https://github.com/fluree/version-2-list-generator/blob/to-do-V2-auth_and_permissions/src/data/03-rules.json) and transacted to the Fluree ledger.
+We won't go over every rule and their smart functions connected to the endUser role, however they can all be found [here](https://github.com/fluree/version-2-lists-generator/blob/to-do-V2-auth_and_permissions/src/data/03-rules.json) and transacted to the Fluree ledger.
 
 ### Auth records and public-private keys
 
 Now that the roles and rules are transacted into the ledger it is time we create auth records for our users and connect them to public-private keys in order for us to sign queries and transcation, as well as see it in the app UI.
 
-The sample schema provided [here](https://github.com/fluree/version-2-list-generator/blob/to-do-V2-auth_and_permissions/src/data/04-Sample-data.json) has users with nested auth records, like the example below:
+The sample schema provided [here](https://github.com/fluree/version-2-lists-generator/blob/to-do-V2-auth_and_permissions/src/data/04-Sample-data.json) has users with nested auth records, like the example below:
 
 ```json
 [
@@ -172,7 +172,7 @@ This auth id is already tied to a public-private key pair, in the sense that it 
 <img src="/src/Images/Generate_prub_priv_keys.gif" alt="generating public private keys" width="650" />
 </p>
 
-This will prompt a modal to appear with the **Public Key**, **Private Key**, and **Auth Id**. You can either transact the auth record within the modal (remembering to make the approriate role changes if necessary), then connect the auth id to a user in a separate transaction, or you can copy the auth object, and nest it into a user transaction similar to the one above. **But be sure to save the public and private keys externally before closing the modal**. In this tutorial there have six users in our sample data and their public-private keys and auth ids are kept in the [usersAuth.js](https://github.com/fluree/version-2-list-generator/blob/to-do-V2-auth_and_permissions/src/data/usersAuth.js). Once the sample data is fully transacted, we can now move on to issuing signed queries and transactions.
+This will prompt a modal to appear with the **Public Key**, **Private Key**, and **Auth Id**. You can either transact the auth record within the modal (remembering to make the approriate role changes if necessary), then connect the auth id to a user in a separate transaction, or you can copy the auth object, and nest it into a user transaction similar to the one above. **But be sure to save the public and private keys externally before closing the modal**. In this tutorial there have six users in our sample data and their public-private keys and auth ids are kept in the [usersAuth.js](https://github.com/fluree/version-2-lists-generator/blob/to-do-V2-auth_and_permissions/src/data/usersAuth.js). Once the sample data is fully transacted, we can now move on to issuing signed queries and transactions.
 
 ## Signing Queries and Transactions
 
@@ -180,7 +180,7 @@ The marriage between issuing permissions and generating private-public keys take
 
 ### Signing Queries
 
-The query below uses the `signQuery` function. It takes a private key, param, queryType, host, and db as parameters (defined below), then it returns an object with keys: `header`, `method` and `body`, which can be sent to the `/query` endpoint (or other possible endpoints such as `/multi-query`, `history`, and `block`). This specific query can be found [here](https://github.com/fluree/to-do-lists-generator/blob/42fd9831f4ee79665dcc266ee915de4278cf91f3/src/ListContext.js#L138), it is triggered on load and defaults to the rootUser on the tab component. Each tab option is a different user with different permissions. The lists view changes given their identity.
+The query below uses the `signQuery` function. It takes a private key, param, queryType, host, and db as parameters (defined below), then it returns an object with keys: `header`, `method` and `body`, which can be sent to the `/query` endpoint (or other possible endpoints such as `/multi-query`, `history`, and `block`). This specific query can be found [here](https://github.com/fluree/version-2-lists-generator/blob/48c54ed2dd21b20c098d56aa53c3854a44760a54/src/ListContext.js#L138), it is triggered on load and defaults to the rootUser on the tab component. Each tab option is a different user with different permissions. The lists view changes given their identity.
 
 ```js
 import { signQuery } from '@fluree/crypto-utils';
@@ -224,7 +224,7 @@ fetch(`${baseURL}/query`, signed) //fetch issues the request to the given url an
 
 ### Signing Transactions
 
-These are two example transactions, they both use the `signTransaction` function, which takes an auth id, db, expire, fuel, private key, tx, and optional deps. It is similar to the query version, but the output of `signTransaction` is then placed within the body of the POST request. Please refer to [deleteTaskFromFluree](https://github.com/fluree/version-2-list-generator/blob/bb0497f7bfa988764b6b9573ec4ff954ad858050/src/ListContext.js#L260) and [editTaskProps](https://github.com/fluree/version-2-list-generator/blob/bb0497f7bfa988764b6b9573ec4ff954ad858050/src/ListContext.js#L334) for their full implementation.
+These are two example transactions, they both use the `signTransaction` function, which takes an auth id, db, expire, fuel, private key, tx, and optional deps. It is similar to the query version, but the output of `signTransaction` is then placed within the body of the POST request. Please refer to [deleteTaskFromFluree](https://github.com/fluree/version-2-lists-generator/blob/bb0497f7bfa988764b6b9573ec4ff954ad858050/src/ListContext.js#L260) and [editTaskProps](https://github.com/fluree/version-2-lists-generator/blob/bb0497f7bfa988764b6b9573ec4ff954ad858050/src/ListContext.js#L334) for their full implementation.
 
 ```js
 import { signTranaction } from '@fluree/crypto-utils';
