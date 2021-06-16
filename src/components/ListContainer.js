@@ -10,6 +10,11 @@ function ListContainer() {
 
   const { lists, deleteTaskFromFluree, handleUserChange, selectedUser } =
     listInfo;
+  if (lists.status && lists.status === 400) {
+    window.alert(
+      `${lists.message} -- Have you added the ledger and updated the app code in appConfig.js with the correct ledger name?`
+    );
+  }
 
   const TaskList = (props) => {
     const listItem = (
